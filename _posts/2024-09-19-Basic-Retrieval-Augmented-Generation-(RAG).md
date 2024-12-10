@@ -1,4 +1,4 @@
-## Retrieval Augmented Generation (RAG)
+## Basics of Retrieval Augmented Generation (RAG)
 
 RAG is a very common approach that can enhance an LLM's response by providing the LLM with external factual knowledge in the generation process.
 
@@ -88,7 +88,7 @@ Langchain provides various `document_loaders` to use according to the document t
 
 Earlier, indexing step was introduced as the combination of formatting and embedding. The formatting part is equivalent to the splitting part of the code above. As it is written, the loaded document is split up into chunks by a `text_splitter`. Similar to `document_loaders`, Langchain also has various `text_splitters`, one of which is `RecursiveCharacterTextSplitter` used in the code. The `RecursiveCharacterTextSplitter` recursively splits the document until the specified `chunk_size` is reached. `Chunk_overlap` can also be set to control the number of characters that lie between two adjacent chunks of text. The characters that the splitter uses are `['\n\n', '\n', ' ', '' ]`. Aside from the commonly used `RecursiveCharacterTextSplitter`, there are many other techniques that can be utilized for splitting, such as semantic splitting, agentic splitting, and etc. For more information about these other methods, take a look at [this video](https://www.youtube.com/watch?v=8OJC21T2SL4). 
 
-Embedding is a numerical representation (vector) of a document chunk, which in this case, is made and stored by a database called `ChromaDB`. As written above, the database offers embedding types like `OpenAIEmbeddings` as its parameters. With the `as_retriever()` function, the database can act as a retriever that would retrieve relevant document chunks from the embedding space that the database created. 
+Embedding is a numerical representation (vector) of a document chunk, which in this case, is made and stored by a database called `ChromaDB`. As written above, the database could take in embedding types like `OpenAIEmbeddings` as its parameters. With the `as_retriever()` function, the database can act as a retriever that would retrieve relevant document chunks from the embedding space that the database created. 
 
 #### Retrieval
 
@@ -98,19 +98,4 @@ Now that we have created an embedding space and stored embeddings in a vectorsto
 
 For the final step of generation, certain prompt engineering is adopted to allow the LLM to understand its duty for RAG. For the RAG chain, it is noticeable that the dictionary containing context and question key values, `prompt`, `llm`, and `StrOutputParser` make a single chain, where `|` is an operator that connects two adjacent elements as a chain. The `context` key value is the retrieved document chunks formatted by `format_docs` function whereas the question is passed by the `RunnablePassthrough()`. Then using the dictionary, the `context` key value and the `question` key value act as inputs of the pre-existing RAG prompt. The whole RAG prompt is finally given to the LLM, yielding an answer to the question. 
 
-### Modular RAG
-
-![image](https://github.com/user-attachments/assets/8000facf-3754-4e68-85f0-c255db698a2f)
-Modular RAG flow ([Source](https://github.com/langchain-ai/rag-from-scratch))
-
-Basic RAG, often referred to as naive RAG, is a slightly outdated version. Not only is the pipeline too simple, but it also often struggles to understand complex user queries, retrieves irrelevant chunks, and ultimately result in hallucinated responses. Attempting to solve these issues, the state of the art version of RAG called Modular RAG incorporates various modules that can be modified and applied to enhance RAG performance. Langchain defines the modules as follows:
-+ Query Translation 
-+ Routing
-+ Query Structuring
-+ Indexing
-+ Retrieval
-+ Generation
-
-#### Query Translation
-
-
+This is a typical set up of a basic RAG pipeline, which nowadays is rarely utilized and almost considered obsolete. 
