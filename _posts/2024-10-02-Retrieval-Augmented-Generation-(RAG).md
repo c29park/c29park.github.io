@@ -104,10 +104,13 @@ For the final step of generation, certain prompt engineering is adopted to allow
 Modular RAG flow ([Source](https://github.com/langchain-ai/rag-from-scratch))
 
 Basic RAG, often referred to as naive RAG, is a slightly outdated version. Not only is the pipeline too simple, but it also often struggles to understand complex user queries, retrieves irrelevant chunks, and ultimately result in hallucinated responses. Attempting to solve these issues, the state of the art version of RAG called Modular RAG incorporates various modules that can be modified and applied to enhance RAG performance. Langchain defines the modules as follows:
-+ Query Translation
++ Query Translation 
 + Routing
 + Query Structuring
 + Indexing
 + Retrieval
 + Generation
+
+#### Query Translation
+
 
