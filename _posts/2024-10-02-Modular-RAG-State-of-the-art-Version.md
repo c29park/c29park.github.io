@@ -10,9 +10,10 @@ Basic RAG, often referred to as naive RAG, is a slightly outdated version. Not o
 + Indexing
 + Retrieval
 + Generation
+
 ----------------------------------
 ### Query Translation
 
 ![image](https://github.com/user-attachments/assets/84af8c55-25b1-47a7-80cb-0e28c5fbf13b)
 
-The first module for modular RAG is Query Translation. This module transforms the query so that better retreival of documents can be done. This might be non-intuitive just yet, but as we go through a few examples of query translation techniques. Before we go through them, we ought to know how a query can be transformed. 
+The first module for modular RAG is Query Translation. This module transforms the query such that better retreival of documents can be done. Before we go through some techniques , we ought to know how a query can be transformed. 
