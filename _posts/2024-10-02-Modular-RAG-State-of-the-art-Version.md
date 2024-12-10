@@ -1,4 +1,4 @@
-### Modular RAG
+## Modular RAG
 
 ![image](https://github.com/user-attachments/assets/8000facf-3754-4e68-85f0-c255db698a2f)
 Modular RAG flow ([Source](https://github.com/langchain-ai/rag-from-scratch))
@@ -10,8 +10,8 @@ Basic RAG, often referred to as naive RAG, is a slightly outdated version. Not o
 + Indexing
 + Retrieval
 + Generation
-
-#### Query Translation
+----------------------------------
+### Query Translation
 
 ![image](https://github.com/user-attachments/assets/84af8c55-25b1-47a7-80cb-0e28c5fbf13b)
 
