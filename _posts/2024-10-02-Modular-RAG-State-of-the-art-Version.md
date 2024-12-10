@@ -21,4 +21,6 @@ The first module for modular RAG is Query Translation. This module transforms th
 #### Multi-Query
 
 ![image](https://github.com/user-attachments/assets/26a2f8af-a0fd-4c49-80cb-a64390df4eea)
-Multi-Query flow
+
+Multi-Query flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb))
+
