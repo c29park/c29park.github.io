@@ -42,7 +42,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 
 # Multi Query: Different Perspectives
-template = """You are an AI language model assistant. Your task is to generate five 
+template1 = """You are an AI language model assistant. Your task is to generate five 
 different versions of the given user question to retrieve relevant documents from a vector 
 database. By generating multiple perspectives on the user question, your goal is to help
 the user overcome some of the limitations of the distance-based similarity search. 
@@ -71,7 +71,7 @@ question = "What is task decomposition for LLM agents?"
 retrieval_chain = generate_queries | retriever.map() | get_unique_union
 
 ### RAG pipeline
-template = """Answer the following question based on this context:
+template2 = """Answer the following question based on this context:
 
 {context}
 
@@ -93,6 +93,26 @@ final_rag_chain = (
 final_rag_chain.invoke({"question":question})
 ```
 
-As mentioned in the Multi-Query prompt `template`, the LLM will provide multiple re-written questions separated by new lines given the original question from the user in the chain called `generate_queries`. Subsequently, `retrieval_chain` chains `generate_queries`, `retriever.map()`, and `get_unique_union`. As the image of the flow shows, the overall retrieval chain retrieves relevant documents to each generated query in parallel. This is why the `map()` function mapping the results of the retrieval was used on the `retriever`, which is essentially the vectorstore acting as a retriever. The retrieved documents for each query are formatted by the custom `get_unique_union` function, which returns a list of documents without any duplicates. For the final RAG chain, the `retrieval_chain` is passed as the overall context of the original question in the `template`, and the rest is the same process seen in Basic RAG code. 
+As mentioned in the Multi-Query prompt `template1`, the LLM will provide multiple re-written questions separated by new lines given the original question from the user in the chain called `generate_queries`. The number of generated queries can be changed by writing an additional instruction in `template1`. Subsequently, `retrieval_chain` chains `generate_queries`, `retriever.map()`, and `get_unique_union`. As the image of the flow shows, the overall retrieval chain retrieves relevant documents to each generated query in parallel. This is why the `map()` function mapping the results of the retrieval was used on the `retriever`, which is essentially the vectorstore acting as a retriever. The retrieved documents for each query are formatted by the custom `get_unique_union` function, which returns a list of documents without any duplicates. For the final RAG chain, the `retrieval_chain` is passed as the overall context of the original question in the `template2`, and the rest is the same process seen in Basic RAG code. 
 
+There is also an option for using the default `MultiQueryRetriever` provided by Langchain, of which the details can be seen [here](https://python.langchain.com/docs/modules/data_connection/retrievers/MultiQueryRetriever). 
+#### RAG-Fusion
+
+![image](https://github.com/user-attachments/assets/db827943-0853-4fe4-b473-5e6b0557edf4)
+
+RAG-Fusion flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb))
+
+A slightly modified version of Multi-Query is RAG-Fusion, which adds an additional step of ranking the documents before giving the retrieved content as context to the LLM. The ranking process uses ranks the document based on a score called Reciprocal Rank Fusion (RRF), which is calculated as follows:
+
+```math
+RRFscore\left(d \in D \right) = \sum_{r \in R} \frac{1}{k + r\left(d\right)} 
+```
+where
+- D is the set of all documents
+- d is a document
+- R is the set of rankers (retrievers)    
+- k is a constant (typically 60)
+- r(d) is the rank of document d in ranker r 
+
+[Source](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) 
 
