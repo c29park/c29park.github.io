@@ -3,7 +3,7 @@
 ![image](https://github.com/user-attachments/assets/8000facf-3754-4e68-85f0-c255db698a2f)
 Modular RAG flow ([Source](https://github.com/langchain-ai/rag-from-scratch))
 
-Basic RAG, often referred to as naive RAG, is a slightly outdated version. Not only is the pipeline too simple, but it also often struggles to understand complex user queries, retrieves irrelevant chunks, and ultimately result in hallucinated responses. Attempting to solve these issues, the state of the art version of RAG called Modular RAG incorporates various modules that can be modified and applied to enhance RAG performance. Langchain defines the modules as follows:
+Basic RAG, often referred to as Naive RAG, is slightly outdated. Not only is the pipeline too simple, but it also often struggles to understand complex user queries, retrieves irrelevant chunks, and ultimately results in hallucinated responses. Attempting to solve these issues, the state of the art version of RAG called Modular RAG incorporates various modules that can be modified and applied to enhance RAG performance. Langchain defines the modules as follows:
 + Query Translation 
 + Routing
 + Query Structuring
@@ -100,9 +100,9 @@ There is also an option for using the default `MultiQueryRetriever` provided by 
 
 ![image](https://github.com/user-attachments/assets/db827943-0853-4fe4-b473-5e6b0557edf4)
 
-RAG-Fusion flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb))
+[RAG-Fusion](https://arxiv.org/abs/2402.03367)  flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_5_to_9.ipynb))
 
-A slightly modified version of Multi-Query is RAG-Fusion, which adds an additional step of ranking the documents before giving the retrieved content as context to the LLM. The ranking process uses ranks the document based on a score called Reciprocal Rank Fusion (RRF), which is calculated as follows:
+A slightly modified version of Multi-Query is RAG-Fusion, which adds an additional step of ranking the documents before giving the retrieved content as context to the LLM. The ranking process uses ranks the document based on a score called [Reciprocal Rank Fusion (RRF)](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf), which is calculated as follows:
 
 ```math
 RRFscore\left(d \in D \right) = \sum_{r \in R} \frac{1}{k + r\left(d\right)} 
@@ -114,5 +114,83 @@ where
 - k is a constant (typically 60)
 - r(d) is the rank of document d in ranker r 
 
-[Source](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) 
+Here is the code implementation (we again assume that the indexing and loading steps are the same): 
+
+```python
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
+from langchain.load import dumps, loads
+from langchain_core.runnables import RunnablePassthrough
+
+# RAG-Fusion: Related
+template = """You are a helpful assistant that generates multiple search queries based on a single input query. \n
+Generate multiple search queries related to: {question} \n
+Output (4 queries):"""
+prompt_rag_fusion = ChatPromptTemplate.from_template(template)
+
+generate_queries = (
+    prompt_rag_fusion 
+    | ChatOpenAI(temperature=0)
+    | StrOutputParser() 
+    | (lambda x: x.split("\n"))
+)
+
+def reciprocal_rank_fusion(results: list[list], k=60):
+    """ Reciprocal_rank_fusion that takes multiple lists of ranked documents 
+        and an optional parameter k used in the RRF formula """
+    
+    # Initialize a dictionary to hold fused scores for each unique document
+    fused_scores = {}
+
+    # Iterate through each list of ranked documents
+    for docs in results:
+        # Iterate through each document in the list, with its rank (position in the list)
+        for rank, doc in enumerate(docs):
+            # Convert the document to a string format to use as a key (assumes documents can be serialized to JSON)
+            doc_str = dumps(doc)
+            # If the document is not yet in the fused_scores dictionary, add it with an initial score of 0
+            if doc_str not in fused_scores:
+                fused_scores[doc_str] = 0
+            # Retrieve the current score of the document, if any
+            previous_score = fused_scores[doc_str]
+            # Update the score of the document using the RRF formula: 1 / (rank + k)
+            fused_scores[doc_str] += 1 / (rank + k)
+
+    # Sort the documents based on their fused scores in descending order to get the final reranked results
+    reranked_results = [
+        (loads(doc), score)
+        for doc, score in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+    ]
+
+    # Return the reranked results as a list of tuples, each containing the document and its fused score
+    return reranked_results
+
+retrieval_chain_rag_fusion = generate_queries | retriever.map() | reciprocal_rank_fusion
+
+# RAG
+template = """Answer the following question based on this context:
+
+{context}
+
+Question: {question}
+"""
+
+prompt = ChatPromptTemplate.from_template(template)
+
+final_rag_chain = (
+    {"context": retrieval_chain_rag_fusion, 
+     "question": itemgetter("question")} 
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+final_rag_chain.invoke({"question":question})
+
+```
+While all other remain unchanged, the prompt and the retrieval chain is slightly modified. To begin with the prompt, 
+
+
+
 
