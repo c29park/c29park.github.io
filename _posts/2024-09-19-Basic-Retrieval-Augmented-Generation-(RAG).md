@@ -21,7 +21,7 @@ The general idea of RAG is to retrieve information from external data sources li
 
 Now that we have a general idea of how RAG works with each step, let's look into the details in terms of the code.   
 > [!Note]
-> The code format for the pipeline depends on the framework on which the pipeline is based (e.g. Langchain, Haystack, LlamaIndex, etc). This post will use sample codes written by [Lance Martin](https://github.com/rlancemartin) from Langchain's RAG from Scratch series to explain the details. 
+> The code format for the pipeline depends on the framework on which the pipeline is based (e.g. Langchain, Haystack, LlamaIndex, etc). This post will use sample codes written by [Lance Martin](https://github.com/rlancemartin) from [Langchain's RAG from Scratch series](https://www.youtube.com/playlist?list=PLfaIDFEXuae2LXbO1_PKyVJiQ23ZztA0x) to explain the details. 
 
 Here is a sample code of Basic RAG:
 
