@@ -189,7 +189,7 @@ final_rag_chain = (
 final_rag_chain.invoke({"question":question})
 
 ```
-While all other remain unchanged, the prompt and the retrieval chain is slightly modified. To begin with the prompt, 
+While all others remain unchanged, the retrieval chain is slightly modified with the addition of the `reciprocal_rank_fusion` function. As the description states, the function takes in multiple documents with certain 'pre-rankings'. The 'pre-rankings' of the retrieved documents are equivalent to the position of the documents in the list, each of which is assigned by the vectorstore. For each document,
 
 
 
