@@ -189,7 +189,9 @@ final_rag_chain = (
 final_rag_chain.invoke({"question":question})
 
 ```
-While all others remain unchanged, the retrieval chain is slightly modified with the addition of the `reciprocal_rank_fusion` function. As the description states, the function takes in multiple documents with certain 'pre-rankings'. The 'pre-rankings' of the retrieved documents are equivalent to the position of the documents in the list, each of which is assigned by the vectorstore. For each document,
+While all others remain unchanged, the retrieval chain is slightly modified with the addition of the `reciprocal_rank_fusion` function. As the description states, the function takes in multiple documents with certain 'pre-rankings'. The 'pre-rankings' of the retrieved documents are equivalent to the position of the documents in the list, each of which is assigned by the vectorstore. For each unique document, the function calculates a fused score using the RRF algorithm and outputs the list of document-and-score tuples in descending order. Recall that there are multiple queries generated and compared with the document embeddings for retrieval of documents. This increases the likelihood of retrieval of same document(s) with different queries, which would have the fused score cumulate multiple times whenever that specific document is referred to. As for the rankings, the position of the list corresponds to the document's ranking, which follows that the higher the fused score, the more relevant the document is to the original query. By having the `retrieval_chain_rag_fusion` serve as the context, the LLM receives the document content as well as its fused score. 
+
+
 
 
 
