@@ -104,8 +104,9 @@ There is also an option for using the default `MultiQueryRetriever` provided by 
 
 A slightly modified version of Multi-Query is RAG-Fusion, which adds an additional step of ranking the documents before giving the retrieved content as context to the LLM. The ranking process uses ranks the document based on a score called [Reciprocal Rank Fusion (RRF)](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf), which is calculated as follows:
 
-$$RRFscore \left(d \in D \right) = \sum_{r \in R} \frac{1}{k + r \left( d \right)}$$ 
-
+```math
+RRFscore \left(d \in D \right) = \sum_{r \in R} \frac{1}{k + r \left( d \right)}
+```
 
 where
 - D is the set of all documents
