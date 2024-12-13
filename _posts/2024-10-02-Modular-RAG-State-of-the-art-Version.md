@@ -195,7 +195,8 @@ While all others remain unchanged, the retrieval chain is slightly modified with
 #### Decomposition
 
 ![캡처](https://github.com/user-attachments/assets/f04f410d-f746-4e5d-a64c-e55a8e9f980d)
-![resized_image](https://github.com/user-attachments/assets/c681c6c1-b38d-485f-81f1-d68e5b49e823)
+![ㅇ](https://github.com/user-attachments/assets/29adf99e-407e-4c62-9323-e4b2c2fffa91)
+
 
 
 
