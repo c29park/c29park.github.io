@@ -196,9 +196,9 @@ While all others remain unchanged, the retrieval chain is slightly modified with
 
 ![캡처](https://github.com/user-attachments/assets/f04f410d-f746-4e5d-a64c-e55a8e9f980d)
 
-Least-to-Most Prompting for solving math question
+Least-to-Most Prompting for solving a math question ([Source](https://arxiv.org/pdf/2205.10625))
 
-Another technique for query translation is decomposition, where it breaks down the original query into multiple sub-queries. Before we dive into the specifics, we ought to look into some prompting techniques. The idea of breaking down a question into sub questions and solving them sequentially was first introduced in [this paper](https://arxiv.org/pdf/2205.10625). 
+Another technique for query translation is decomposition, where it breaks down the original query into multiple sub-queries. Before we dive into the specifics, we ought to look into some prompting techniques. The idea of breaking down a question into sub questions and solving them sequentially, addressed as Least-to-Most prompting, was first introduced in [this paper](https://arxiv.org/pdf/2205.10625). Prior to the emergence of Least-to-Most, zero-shot prompting, standard prompting, and Chain-of-Thought (CoT) prompting were commonly used. Zero-shot prompting means that there are no demonstrations or examples of questions and answers in the prompt, whereas standard prompting takes a similar question to the original question and pairs it with the answer in the prompt. CoT is an extension of standard prompting, where it provides how the thinking process arrived to the final answer. For instance, suppose we want the LLM to solve the following math question: "Anthony has 12 dollars. He sees that the toy car he wants costs 3 dollars. How many toy cars maximum can he buy?". For CoT prompting, we would provide a similar question like "Sarah has 36 bottles of water. If are 9 marathon athletes, how many bottles of water can each athlete get from Sarah when they are evenly distributed?" and answer with reasoning like "Sarah has 36 bottles of water and there are 9 marathon athletes. Since 36 divided by 9 equals 4, each athlete can get 4 bottles of water from Sarah given that they are evenly distributed." In theory, with this kind of prompting, the LLM generates an answer with the following thinking process, allowing for complex reasoning capabilities.   
 
 
 
