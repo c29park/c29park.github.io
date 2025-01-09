@@ -283,3 +283,82 @@ for q in questions:
 The first prompt for decomposition instructs the LLM to break down the single input question into multiple subquestions. 
 The `generate_queries_decomposition` then uses the LLM to generate subquestions with separation by new lines. An example of set of subquestions generated from the specific query "What are the main components of an LLM-powered autonomous agent system?" is `['1. What is an LLM-powered autonomous agent system?', '2. What are the key components of an autonomous agent system?', '3. How does LLM technology enhance the capabilities of an autonomous agent system?' ]`. As mentioned in the prompt, the subquestions are answerable in isolation. However, the goal of IRCoT seems to be slightly unsatisfied with the code above. Although the algorithm above recursively answers the questions step by step by adding `q_a_pairs` as the main context to answer the final question, it defeats the purpose of sequentially answering the questions one by one since the questions are simply answerable in isolation and yet do not build upon each other. Notice that the questions are numbered. This is the order of the questions being answered, meaning that the answer of the third question based on the context with `q_a_pairs` of questions 1 and 2 would be the final output of the original query. Considering this, this prompt does not incorporate the importance of IRCoT's original goal of recursive and sequential answering. Therefore, we could direct the LLM to produce the list of questions such that the order of the questions generated ensures that the questions' answers can build up and help arrive to the final conclusion. We might also use an LLM-as-judge to strengthen the accuracy and relevance of the questions generated, where we use another LLM to judge the questions generated - whether the questions generated form the "build up process" and whether the order satisfies the "build up process". Indeed, there is a computational latency issue if this is added. Just a thought here.
 
+#### Step Back prompting
+
+![wth](https://github.com/user-attachments/assets/fd3c6a88-9dc7-49a8-830c-9fe9e9189f59)
+Illustration of Step back prompting ([Source]("https://arxiv.org/pdf/2310.06117"))
+
+Previously, we looked at the decomposition technique, where we translated a single input question to multiple subqueries for better context writing. As the image above and its name suggest, as opposed to decomposition, step back prompting goes more abstract with the input question. For instance, suppose that we received a highly specific input question "What were the main drivers of customer dissatisfaction for Air Canada flights departing from Toronto to Vancouver between July and August 2023?". Then, the step back question of this would be "What are common factors contributing to customer dissatisfaction for flights operated by Air Canada?". We notice that we can formulate a more generalized question to simplify the original question. How would we write the prompt so that the LLM could properly generate a more simplified question? To overcome this challenge, we typically add a few examples of original question and step back question pair so that the LLM learns how the step back question should be generated. This prompting technique of adding a few examples for better generation is called the few-shot prompting. For greater understanding, let's look at Lance's code for step back prompting:
+
+```
+# Few Shot Examples
+from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
+examples = [
+    {
+        "input": "Could the members of The Police perform lawful arrests?",
+        "output": "what can the members of The Police do?",
+    },
+    {
+        "input": "Jan Sindel’s was born in what country?",
+        "output": "what is Jan Sindel’s personal history?",
+    },
+]
+# We now transform these to example messages
+example_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("human", "{input}"),
+        ("ai", "{output}"),
+    ]
+)
+few_shot_prompt = FewShotChatMessagePromptTemplate(
+    example_prompt=example_prompt,
+    examples=examples,
+)
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """You are an expert at world knowledge. Your task is to step back and paraphrase a question to a more generic step-back question, which is easier to answer. Here are a few examples:""",
+        ),
+        # Few shot examples
+        few_shot_prompt,
+        # New question
+        ("user", "{question}"),
+    ]
+)
+
+generate_queries_step_back = prompt | ChatOpenAI(temperature=0) | StrOutputParser()
+question = "What is task decomposition for LLM agents?"
+generate_queries_step_back.invoke({"question": question})
+
+# Response prompt 
+response_prompt_template = """You are an expert of world knowledge. I am going to ask you a question. Your response should be comprehensive and not contradicted with the following context if they are relevant. Otherwise, ignore them if they are not relevant.
+
+# {normal_context}
+# {step_back_context}
+
+# Original Question: {question}
+# Answer:"""
+response_prompt = ChatPromptTemplate.from_template(response_prompt_template)
+
+chain = (
+    {
+        # Retrieve context using the normal question
+        "normal_context": RunnableLambda(lambda x: x["question"]) | retriever,
+        # Retrieve context using the step-back question
+        "step_back_context": generate_queries_step_back | retriever,
+        # Pass on the question
+        "question": lambda x: x["question"],
+    }
+    | response_prompt
+    | ChatOpenAI(temperature=0)
+    | StrOutputParser()
+)
+
+chain.invoke({"question": question})
+```
+
+First take a look at the prompt formatting. We first construct a list of example dictionaries that consist of input and output questions. Subsequently, we assign roles for both input and output questions, specifying that the input question comes from a human and that the output question is generated by AI. Finally, we form it into a completed few shot prompt and combine with the main instruction for generating a step back question. A sample output by the `generate_queries_step_back` chain for the input question "What is task decomposition for LLM agents?" is "What is task decomposition?". For the response prompt, the `normal_context`  retrieved with the original question, the `step_back_context` retrieved with the step back question, and the original question is provided. By doing so, the LLM could generate a response with a normal context and a broader context, which allows for more organized response generation. 
+
+
+
