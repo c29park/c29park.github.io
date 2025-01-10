@@ -286,7 +286,7 @@ The `generate_queries_decomposition` then uses the LLM to generate subquestions 
 #### Step Back prompting
 
 ![wth](https://github.com/user-attachments/assets/fd3c6a88-9dc7-49a8-830c-9fe9e9189f59)
-Illustration of Step back prompting ([Source]("https://arxiv.org/pdf/2310.06117"))
+Illustration of Step back prompting ([Source](https://arxiv.org/abs/2310.06117))
 
 Previously, we looked at the decomposition technique, where we translated a single input question to multiple subqueries for better context writing. As the image above and its name suggest, as opposed to decomposition, step back prompting goes more abstract with the input question. For instance, suppose that we received a highly specific input question "What were the main drivers of customer dissatisfaction for Air Canada flights departing from Toronto to Vancouver between July and August 2023?". Then, the step back question of this would be "What are common factors contributing to customer dissatisfaction for flights operated by Air Canada?". We notice that we can formulate a more generalized question to simplify the original question. How would we write the prompt so that the LLM could properly generate a more simplified question? To overcome this challenge, we typically add a few examples of original question and step back question pair so that the LLM learns how the step back question should be generated. This prompting technique of adding a few examples for better generation is called the few-shot prompting. For greater understanding, let's look at Lance's code for step back prompting:
 
