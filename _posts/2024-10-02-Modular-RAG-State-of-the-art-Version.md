@@ -423,7 +423,13 @@ final_rag_chain = (
 final_rag_chain.invoke({"context":retrieved_docs,"question":question})
 ```
 
-As you can see in the code, the =`generate_docs_for_retrieval` chain takes the input question and converts it into a passage that can possibly solve the question. Then, we make the `retrieval_chain` such that when the question is feeded to the chain, relevant documents to the hypothetical document can be retrieved. As always, we use the retrieved documents as the overall context with which the LLM generates response. 
+As you can see in the code, the =`generate_docs_for_retrieval` chain takes the input question and converts it into a passage that can possibly solve the question. Then, we make the `retrieval_chain` such that when the question is fed to the chain, relevant documents to the hypothetical document can be retrieved. As always, we use the retrieved documents as the overall context with which the LLM generates response. 
+
+### Routing
+
+![image](https://github.com/user-attachments/assets/238c360c-bd10-405f-9c1b-6836fb026f1c)
+
+![image](https://github.com/user-attachments/assets/2d918659-f7c8-48b5-9c57-b08ae9f7f095)
 
 
 
