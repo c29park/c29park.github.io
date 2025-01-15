@@ -378,7 +378,52 @@ where
 + $$v_d$$ = document embedding
 
 This equation simply suggests that the conventional dense retrieval's similarity measurement is the inner product between the question embedding and the document embedding. Since inner product can only be  computed when the two vectors are of the same dimension, each encoder has to map the corresponding entity to a vector of the same dimension. It can be mathematically written like this: $$v_q, v_d \in \mathbb{R}^k, k \in \mathbb{Z}^+$$. 
- 
+If we were to make the retrieval zero-shot, we need to somehow define the two mapping functions without looking at the queries, the documents, or any relevance judgement. The encoder functions also have to map the query and the document to the same embedding space and have the inner product represent the relevance of the document to the query. On top of that, when it comes to retrieving a relevant document and a question, their semantic difference might hinder an accurate retrieval process. 
+
+To resolve this, we take the question and transform it to a document so that document-document comparison can be made. Here is the code implementation: 
+```python
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_openai import ChatOpenAI
+
+# HyDE document generation
+template = """Please write a scientific paper passage to answer the question
+Question: {question}
+Passage:"""
+prompt_hyde = ChatPromptTemplate.from_template(template)
+
+generate_docs_for_retrieval = (
+    prompt_hyde | ChatOpenAI(temperature=0) | StrOutputParser() 
+)
+
+# Run
+question = "What is task decomposition for LLM agents?"
+generate_docs_for_retrieval.invoke({"question":question})
+
+# Retrieve
+retrieval_chain = generate_docs_for_retrieval | retriever 
+retrieved_docs = retrieval_chain.invoke({"question":question})
+
+# RAG
+template = """Answer the following question based on this context:
+
+{context}
+
+Question: {question}
+"""
+
+prompt = ChatPromptTemplate.from_template(template)
+
+final_rag_chain = (
+    prompt
+    | llm
+    | StrOutputParser()
+)
+
+final_rag_chain.invoke({"context":retrieved_docs,"question":question})
+```
+
+As you can see in the code, the =`generate_docs_for_retrieval` chain takes the input question and converts it into a passage that can possibly solve the question. Then, we make the `retrieval_chain` such that when the question is feeded to the chain, relevant documents to the hypothetical document can be retrieved. As always, we use the retrieved documents as the overall context with which the LLM generates response. 
 
 
 
