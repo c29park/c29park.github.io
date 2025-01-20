@@ -562,5 +562,111 @@ print(chain.invoke("What's a black hole"))
 As written in the code, there are two prompts: one that instructs the LLM to use physics for the response and the other that instructs the LLM to use math. Then, we embed both prompts as well as the question and compute the cosine similarity to get the most similar prompt. A sample output of the line `print(chain.invoke("What's a black hole"))` is "Using PHYSICS
 A black hole is a region in space where the gravitational pull is so strong that nothing, not even light, can escape from it. It is formed when a massive star collapses in on itself. The boundary surrounding a black hole is called the event horizon. Beyond the event horizon, the gravitational pull is so intense that even time and space are distorted. Black holes are some of the most mysterious and fascinating objects in the universe."
 
+### Query Construction (Structuring)
 
+![image](https://github.com/user-attachments/assets/7e52f995-4948-4567-a492-d9a6231cfd92)
+
+Once we know the database to which the question is routed, we could take an additional step of structuring the query -- converting the natural language query into a domain (database) specific language for better retrieval. In the case of routing a question to a vector database, we could transform the query to metadata filters to search for specific document chunks using the vector database's metadata fields. 
+
+![image](https://github.com/user-attachments/assets/3d844659-37ec-4fc4-8fcd-90b10c7ee567)
+
+Let's take Youtube videos as an example. We could simulate query structuring by using metadata filters of youtube videos and the LLM to output the relevant metadata field values. Notice that the flow above is almost identical to the logical routing flow. Indeed, they share the same method of code implementation: 
+
+```python
+from langchain_community.document_loaders import YoutubeLoader
+
+docs = YoutubeLoader.from_youtube_url(
+    "https://www.youtube.com/watch?v=pbAd8O1Lvm4", add_video_info=True
+).load()
+
+docs[0].metadata
+```    
+
+If we run this code, we would get the following output: 
+
+```{'source': 'pbAd8O1Lvm4',
+ 'title': 'Self-reflective RAG with LangGraph: Self-RAG and CRAG',
+ 'description': 'Unknown',
+ 'view_count': 11922,
+ 'thumbnail_url': 'https://i.ytimg.com/vi/pbAd8O1Lvm4/hq720.jpg',
+ 'publish_date': '2024-02-07 00:00:00',
+ 'length': 1058,
+ 'author': 'LangChain'}
+```
+Now we know that a Youtube video has the following fields. 
+
+```
+import datetime
+from typing import Literal, Optional, Tuple
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+class TutorialSearch(BaseModel):
+    """Search over a database of tutorial videos about a software library."""
+
+    content_search: str = Field(
+        ...,
+        description="Similarity search query applied to video transcripts.",
+    )
+    title_search: str = Field(
+        ...,
+        description=(
+            "Alternate version of the content search query to apply to video titles. "
+            "Should be succinct and only include key words that could be in a video "
+            "title."
+        ),
+    )
+    min_view_count: Optional[int] = Field(
+        None,
+        description="Minimum view count filter, inclusive. Only use if explicitly specified.",
+    )
+    max_view_count: Optional[int] = Field(
+        None,
+        description="Maximum view count filter, exclusive. Only use if explicitly specified.",
+    )
+    earliest_publish_date: Optional[datetime.date] = Field(
+        None,
+        description="Earliest publish date filter, inclusive. Only use if explicitly specified.",
+    )
+    latest_publish_date: Optional[datetime.date] = Field(
+        None,
+        description="Latest publish date filter, exclusive. Only use if explicitly specified.",
+    )
+    min_length_sec: Optional[int] = Field(
+        None,
+        description="Minimum video length in seconds, inclusive. Only use if explicitly specified.",
+    )
+    max_length_sec: Optional[int] = Field(
+        None,
+        description="Maximum video length in seconds, exclusive. Only use if explicitly specified.",
+    )
+
+    def pretty_print(self) -> None:
+        for field in self.__fields__:
+            if getattr(self, field) is not None and getattr(self, field) != getattr(
+                self.__fields__[field], "default", None
+            ):
+                print(f"{field}: {getattr(self, field)}")
+
+system = """You are an expert at converting user questions into database queries. \
+You have access to a database of tutorial videos about a software library for building LLM-powered applications. \
+Given a question, return a database query optimized to retrieve the most relevant results.
+
+If there are acronyms or words you are not familiar with, do not try to rephrase them."""
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system),
+        ("human", "{question}"),
+    ]
+)
+
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
+structured_llm = llm.with_structured_output(TutorialSearch)
+query_analyzer = prompt | structured_llm
+```
+
+The code above defines a schema for generating structured queries, where it allows to perform `title_search` and `content_search` as well as range filtering for `view count`, `publication date`, and `length`. As always, the system prompt is given that specifies the action of returning a database query to retrieve the most relevant document chunks. If we were to feed the LLM with an input query such as "videos that are focused on the topic of chat langchain that are published before 2024", then the output would be ```content_search: chat langchain
+title_search: chat langchain
+earliest_publish_date: 2024-01-01``` with the ```pretty_print``` applied to the output. Connecting this metadata filtering technique to databases takes a process called self-querying. To see the actual code implementation of self-querying, visit [here](https://python.langchain.com/docs/how_to/self_query/). 
 
