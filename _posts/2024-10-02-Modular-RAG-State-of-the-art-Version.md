@@ -429,7 +429,138 @@ As you can see in the code, the =`generate_docs_for_retrieval` chain takes the i
 
 ![image](https://github.com/user-attachments/assets/238c360c-bd10-405f-9c1b-6836fb026f1c)
 
+([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_10_and_11.ipynb))
+
+Previously, we looked at the techniques for transforming a query to enhance the retrieval of relevant documents. Routing is a stage that comes after the Query Translation component, where it has the LLM route the transformed query to either a desirable database or a prompt for the LLM to use. The routing process for choosing a desirable database to use based on the question is called **Logical routing**. **Semantic routing**, on the other hand, is choosing a prompt for LLM to use for answer generation based on the similarity between the prompt embeddings and the question embedding.
+
+#### Logical Routing
 ![image](https://github.com/user-attachments/assets/2d918659-f7c8-48b5-9c57-b08ae9f7f095)
+
+Logical Routing flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_10_and_11.ipynb))
+![image](https://github.com/user-attachments/assets/a0bc95ed-2a20-417a-a60b-c8b6058e092a)
+Detailed code flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_10_and_11.ipynb))
+
+Logical routing is a process where we instruct an LLM to classify the relevant database for retrieval based on the input question. For instance, suppose you have a graph database that stores knowledge graph of casts of *Squid Game* and a vector database that contains overall summary of the series. When the input question is something like "who played Ki-hoon?", the LLM would route the query to the graph database to answer with more relevant information. In the "RAG from Scratch" series, Lance simulated this routing technique with choosing relevant programming languages based on a query written in a certain programming language:
+```python
+from typing import Literal
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+
+# Data model
+class RouteQuery(BaseModel):
+    """Route a user query to the most relevant datasource."""
+
+    datasource: Literal["python_docs", "js_docs", "golang_docs"] = Field(
+        ...,
+        description="Given a user question choose which datasource would be most relevant for answering their question",
+    )
+
+# LLM with function call 
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
+structured_llm = llm.with_structured_output(RouteQuery)
+
+# Prompt 
+system = """You are an expert at routing a user question to the appropriate data source.
+
+Based on the programming language the question is referring to, route it to the relevant data source."""
+
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", system),
+        ("human", "{question}"),
+    ]
+)
+
+# Define router 
+router = prompt | structured_llm
+
+question = """Why doesn't the following code work:
+
+prompt = ChatPromptTemplate.from_messages(["human", "speak in {language}"])
+prompt.invoke("french")
+"""
+
+result = router.invoke({"question": question})
+
+def choose_route(result):
+    if "python_docs" in result.datasource.lower():
+        ### Logic here 
+        return "chain for python_docs"
+    elif "js_docs" in result.datasource.lower():
+        ### Logic here 
+        return "chain for js_docs"
+    else:
+        ### Logic here 
+        return "golang_docs"
+
+from langchain_core.runnables import RunnableLambda
+
+full_chain = router | RunnableLambda(choose_route)
+```
+
+
+In the code above, `python_docs`, `js_docs`, and `golang_docs` are provided as the available options for choosing the right programming language. The `structured_llm` is instructed to choose from the literals via `RouteQuery` object and to output the JSON string corresponding to the literal. With the prompt and the `structured_llm` chained together as `router`, it prints out the relevant data source. If we were to print out `result`, it would give `python_docs`. Additionally, `choose_route` is essentially a pretty print function that prints the output in a formatted matter. The above flow describes what the code specifically achieves.
+
+#### Semantic Routing
+![image](https://github.com/user-attachments/assets/b9732cb4-ea59-4879-bbb0-74cc9d18f4b3)
+
+Semantic Routing flow ([Source](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_10_and_11.ipynb))
+
+Instead of mapping the query to a certain database, we could also map it to a relevant prompt that the LLM needs to use for better response. To map the query to a certain prompt, we embed both the question and the prompts and do a similarity search. This is called semantic routing. Take a look at the code implementation: 
+
+```python
+from langchain.utils.math import cosine_similarity
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+# Two prompts
+physics_template = """You are a very smart physics professor. \
+You are great at answering questions about physics in a concise and easy to understand manner. \
+When you don't know the answer to a question you admit that you don't know.
+
+Here is a question:
+{query}"""
+
+math_template = """You are a very good mathematician. You are great at answering math questions. \
+You are so good because you are able to break down hard problems into their component parts, \
+answer the component parts, and then put them together to answer the broader question.
+
+Here is a question:
+{query}"""
+
+# Embed prompts
+embeddings = OpenAIEmbeddings()
+prompt_templates = [physics_template, math_template]
+prompt_embeddings = embeddings.embed_documents(prompt_templates)
+
+# Route question to prompt 
+def prompt_router(input):
+    # Embed question
+    query_embedding = embeddings.embed_query(input["query"])
+    # Compute similarity
+    similarity = cosine_similarity([query_embedding], prompt_embeddings)[0]
+    most_similar = prompt_templates[similarity.argmax()]
+    # Chosen prompt 
+    print("Using MATH" if most_similar == math_template else "Using PHYSICS")
+    return PromptTemplate.from_template(most_similar)
+
+
+chain = (
+    {"query": RunnablePassthrough()}
+    | RunnableLambda(prompt_router)
+    | ChatOpenAI()
+    | StrOutputParser()
+)
+
+print(chain.invoke("What's a black hole"))
+``` 
+
+As written in the code, there are two prompts: one that instructs the LLM to use physics for the response and the other that instructs the LLM to use math. Then, we embed both prompts as well as the question and compute the cosine similarity to get the most similar prompt. A sample output of the line `print(chain.invoke("What's a black hole"))` is "Using PHYSICS
+A black hole is a region in space where the gravitational pull is so strong that nothing, not even light, can escape from it. It is formed when a massive star collapses in on itself. The boundary surrounding a black hole is called the event horizon. Beyond the event horizon, the gravitational pull is so intense that even time and space are distorted. Black holes are some of the most mysterious and fascinating objects in the universe."
 
 
 
