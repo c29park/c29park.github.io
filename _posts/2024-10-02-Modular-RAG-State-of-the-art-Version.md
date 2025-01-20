@@ -584,7 +584,8 @@ docs[0].metadata
 
 If we run this code, we would get the following output: 
 
-```{'source': 'pbAd8O1Lvm4',
+```python
+{'source': 'pbAd8O1Lvm4',
  'title': 'Self-reflective RAG with LangGraph: Self-RAG and CRAG',
  'description': 'Unknown',
  'view_count': 11922,
@@ -595,7 +596,7 @@ If we run this code, we would get the following output:
 ```
 Now we know that a Youtube video has the following fields. 
 
-```
+```python
 import datetime
 from typing import Literal, Optional, Tuple
 from langchain_core.pydantic_v1 import BaseModel, Field
