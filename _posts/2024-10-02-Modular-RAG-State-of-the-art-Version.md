@@ -566,7 +566,7 @@ A black hole is a region in space where the gravitational pull is so strong that
 
 ![image](https://github.com/user-attachments/assets/7e52f995-4948-4567-a492-d9a6231cfd92)
 
-Once we know the database to which the question is routed, we could take an additional step of structuring the query -- converting the natural language query into a domain (database) specific language for better retrieval. In the case of routing a question to a vector database, we could transform the query to metadata filters to search for specific document chunks using the vector database's metadata fields. 
+Once we know the database to which the question is to be routed, we could take an additional step of structuring the query -- converting the natural language query into a domain (database) specific language for better retrieval. In the case of routing a question to a vector database, we could transform the query to metadata filters to search for specific document chunks using the vector database's metadata fields. 
 
 ![image](https://github.com/user-attachments/assets/3d844659-37ec-4fc4-8fcd-90b10c7ee567)
 
