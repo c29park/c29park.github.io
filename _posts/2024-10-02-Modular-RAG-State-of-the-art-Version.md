@@ -671,3 +671,18 @@ The code above defines a schema for generating structured queries, where it allo
 title_search: chat langchain
 earliest_publish_date: 2024-01-01``` with the ```pretty_print``` applied to the output. Connecting this metadata filtering technique to databases takes a process called self-querying. To see the actual code implementation of self-querying, visit [here](https://python.langchain.com/docs/how_to/self_query/). 
 
+### Indexing
+
+![image](https://github.com/user-attachments/assets/04fab0ec-8b02-4a20-a915-571d61372def)
+
+[(Source)](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_12_to_14.ipynb)
+
+Now we have reached an important stage called Indexing that processes the documents and enables retrieval by splitting the documents and storing them somewhere (i.e. databases). Previously, variations of indexing techniques were only limited to chunk optimization methods, where there were variations in chunk sizes: chunk sizes vary according to how the documents are split -- splitting by characters, semantic meaning, sections, and delimiters. However, adjusting the chunk size alone is a bit restrictive. Numerous approaches have been proposed to overcome the limitations of utilizing chunk optimization from Multi-representation to ColBERT. In this section, we will go through some of these techniques and their implementations. 
+
+
+#### Multi-representation
+
+![image](https://github.com/user-attachments/assets/32369687-0aee-4211-a52f-edeb55000a91)
+[Multi-representation flow](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_12_to_14.ipynb)
+
+One way to go beyond basic chunk optimization is to have a more unique representation than just document chunks. A typical problem of document chunks is that there could be a loss of overall meaning of the documents as they are commonly separated by sections and certain delimiters. For retrieval as well, chunk embeddings near the query embedding are called for information gathering. Multi-representation is a suggested method to ameliorate the degree of full context meaning loss. The initial processing of documents involves the use of LLM, where the LLM creates a summary for each document chunk. The summaries of the document chunks are indeed converted to embeddings to perform similarity search with the query embedding in the retrieval stage. This may preserve the context of each document chunk but does not necessarily preserve the full context of each document. In order to have our full context preserve for each document, we just store the documents themselves in a separate database so that the documents can be called for retrieval. A significant upside about this indexing technique is that it can be used for RAG with not only documents but multi-modal data that an LLM can properly summarize such as images and tables (csv files).
