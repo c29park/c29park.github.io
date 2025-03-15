@@ -686,3 +686,74 @@ Now we have reached an important stage called Indexing that processes the docume
 [Multi-representation flow](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_12_to_14.ipynb)
 
 One way to go beyond basic chunk optimization is to have a more unique representation than just document chunks. A typical problem of document chunks is that there could be a loss of overall meaning of the documents as they are commonly separated by sections and certain delimiters. For retrieval as well, chunk embeddings near the query embedding are called for information gathering. Multi-representation is a suggested method to ameliorate the degree of full context meaning loss. The initial processing of documents involves the use of LLM, where the LLM creates a summary for each document chunk. The summaries of the document chunks are indeed converted to embeddings to perform similarity search with the query embedding in the retrieval stage. This may preserve the context of each document chunk but does not necessarily preserve the full context of each document. In order to have our full context preserve for each document, we just store the documents themselves in a separate database so that the documents can be called for retrieval. A significant upside about this indexing technique is that it can be used for RAG with not only documents but multi-modal data that an LLM can properly summarize such as images and tables (csv files).
+
+Here is the code implementation: 
+
+```python
+import uuid
+
+from langchain_core.documents import Document
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain.storage import InMemoryByteStore
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain.retrievers.multi_vector import MultiVectorRetriever
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+loader = WebBaseLoader("https://lilianweng.github.io/posts/2023-06-23-agent/")
+docs = loader.load()
+
+loader = WebBaseLoader("https://lilianweng.github.io/posts/2024-02-05-human-data-quality/")
+docs.extend(loader.load())
+
+chain = (
+    {"doc": lambda x: x.page_content}
+    | ChatPromptTemplate.from_template("Summarize the following document:\n\n{doc}")
+    | ChatOpenAI(model="gpt-3.5-turbo",max_retries=0)
+    | StrOutputParser()
+)
+
+summaries = chain.batch(docs, {"max_concurrency": 5})
+
+# The vectorstore to use to index the child chunks
+vectorstore = Chroma(collection_name="summaries",
+                     embedding_function=OpenAIEmbeddings())
+
+# The storage layer for the parent documents
+store = InMemoryByteStore()
+id_key = "doc_id"
+
+# The retriever
+retriever = MultiVectorRetriever(
+    vectorstore=vectorstore,
+    byte_store=store,
+    id_key=id_key,
+)
+doc_ids = [str(uuid.uuid4()) for _ in docs]
+
+# Docs linked to summaries
+summary_docs = [
+    Document(page_content=s, metadata={id_key: doc_ids[i]})
+    for i, s in enumerate(summaries)
+]
+
+# Add
+retriever.vectorstore.add_documents(summary_docs)
+retriever.docstore.mset(list(zip(doc_ids, docs))
+
+query = "Memory in agents"
+sub_docs = vectorstore.similarity_search(query,k=1)
+
+retrieved_docs = retriever.get_relevant_documents(query,n_results=1)
+```
+
+As you can notice in this code, we only have the steps right before the actual retrieval happens, and the code does not include the parts for generation and full rag chain as well. This is going to be the format for all Indexing implementations. In the beginning, we load two documents of blog posts and feed them to the `chain`, which creates a summary for each page content, which is then stored in `summaries`. The `max_concurrency` parameter corresponds to the max number of parallel calls to make. The process of batching with `chain` is equivalent to creating child chunks, which are converted to embeddings and stored into `vectorstore`. To store the parent documents (full documents), we use the `InMemoryByteStore` , which we can think of as a dictionary that saves in memory and loses he data once the program execution has ended. This is the reason why we need a respective id for each document. For the actual retrieval of embeddings, we use the `MultiVectorRetriever`, which uses the `vectorstore` for finding similar chunks and the `byte_store` for retrieving the complete parent documents associated with those chunks. Storing metadata for the docs linked to summaries is crucial. Notice that we create universally unique identifiers for each document so that they can be used by the retriever to see which full document in the docstore corresponds to the summary in the vectorstore. This again ensures that the retriever uses unique identifiers to cross-reference between summary chunks and full documents from the docstore after adding the `summary_docs` to the vectorstore. This is done by the `get_relevant_documents` method. If we want to generate a response using this, we can simply feed the retrieved documents to the LLM. 
+
+
+#### RAPTOR
+
+![image](https://github.com/user-attachments/assets/6ebe54f9-95c4-44f2-a7f8-98f3c7a5bdc8)
+[RAPTOR flow](https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_12_to_14.ipynb)
