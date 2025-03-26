@@ -761,3 +761,81 @@ As you can notice in this code, we only have the steps right before the actual r
 
 How would we implement a tree data structure for retrieval? It seems like we could create a tree using some kind of hierarchy of documents using something like a heap. Recursive Abstractive Processing for Tree-Organized Retrieval ([RAPTOR](https://arxiv.org/pdf/2401.18059.pdf)) conveys an almost exact idea of this. Take a look at the flow image above and think of it as a tree that is rotated 90 degrees to the right. Each node contains a document or a set of documents, where the leaf nodes are raw documents, and the root is a very abstract summary. Since we have to build the tree from the input of raw documents, this is more like an upside down tree than a regular tree. As the image suggests, the rule for constructing the tree is we first get the raw documents and then we convert each to embeddings to cluster them based on their similarities. Then, we get each cluster of documents and summarize them. Subsequently, the summaries are then converted to embeddings and clustered again. We do this recursively until we get a high level summary of all raw documents, and the number of recursive calls can be set manually. In doing so, we have a hierarchy of documents in terms of how abstract(summarized) they are. This also means that the vectorDB can store this organization, allowing for retrieval for raw documents, summaries of intermediate clusters, and the final root summary depending on the situation. The code implementation is too long and complex that I will let the readers read them on their own: ([code link](https://github.com/langchain-ai/langchain/blob/master/cookbook/RAPTOR.ipynb)).
 
+
+#### ColBERT
+
+![image](https://github.com/user-attachments/assets/b2de7f16-5081-403a-933b-9e7415a657a6)
+([Source]())
+
+Another notable indexing technique is [ColBERT](https://arxiv.org/abs/2004.12832), where we modify the number of embeddings that a chunk is represented. When it comes to conventional indexing, we convert a single document chunk to an embedding and calculate some sort of similarity between the embedding converted from the query. However, representing a single document chunk as an embedding could be too semantically abstractive. Instead, we could break down a document chunk into multiple tokens and represent each as an embedding. The question as well is broken down to tokens and are each represented as an embedding. Then we could calculate the relevance score of a document to the question using token-wise embeddings. Specifically, the score is computed by first calculating the maximum similarity of each question token-wise embedding to any of the document token-wise embeddings and then adding all the max similarities. Another key thing about this technique is that a pretrained model is used to generate the token-wise embeddings. One common way to implement ColBERT is by using a framework called [RAGatouille](https://github.com/AnswerDotAI/RAGatouille) that acts as a bridge between state of the art technique like ColBERT and traditional RAG practices. Here is one such implementation developed in LangChain: 
+```python
+from ragatouille import RAGPretrainedModel
+
+RAG = RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")
+
+import requests
+
+
+def get_wikipedia_page(title: str):
+    """
+    Retrieve the full text content of a Wikipedia page.
+
+    :param title: str - Title of the Wikipedia page.
+    :return: str - Full text content of the page as raw string.
+    """
+    # Wikipedia API endpoint
+    URL = "https://en.wikipedia.org/w/api.php"
+
+    # Parameters for the API request
+    params = {
+        "action": "query",
+        "format": "json",
+        "titles": title,
+        "prop": "extracts",
+        "explaintext": True,
+    }
+
+    # Custom User-Agent header to comply with Wikipedia's best practices
+    headers = {"User-Agent": "RAGatouille_tutorial/0.0.1 (ben@clavie.eu)"}
+
+    response = requests.get(URL, params=params, headers=headers)
+    data = response.json()
+
+    # Extracting page content
+    page = next(iter(data["query"]["pages"].values()))
+    return page["extract"] if "extract" in page else None
+
+full_document = get_wikipedia_page("Hayao_Miyazaki")
+
+RAG.index(
+    collection=[full_document],
+    index_name="Miyazaki-123",
+    max_document_length=180,
+    split_documents=True,
+)
+
+results = RAG.search(query="What animation studio did Miyazaki found?", k=3)
+
+retriever = RAG.as_langchain_retriever(k=3)
+
+```
+Here everything is fairly intuitive and undersandable by the comments outlined for each part. We are first defining a function for getting a wikipedia page and then feeding a list of pages converted to a raw string as the `collection`. The variable `results` stores 3 documents related to the query with the rankings and relevance scores: 
+```python
+[{'content': 'In April 1984, Miyazaki opened his own office in Suginami Ward, naming it Nibariki.\n\n\n=== Studio Ghibli ===\n\n\n==== Early films (1985–1996) ====\nIn June 1985, Miyazaki, Takahata, Tokuma and Suzuki founded the animation production company Studio Ghibli, with funding from Tokuma Shoten. Studio Ghibli\'s first film, Laputa: Castle in the Sky (1986), employed the same production crew of Nausicaä. Miyazaki\'s designs for the film\'s setting were inspired by Greek architecture and "European urbanistic templates".',
+  'score': 25.90749740600586,
+  'rank': 1},
+ {'content': 'Hayao Miyazaki (宮崎 駿 or 宮﨑 駿, Miyazaki Hayao, [mijaꜜzaki hajao]; born January 5, 1941) is a Japanese animator, filmmaker, and manga artist. A co-founder of Studio Ghibli, he has attained international acclaim as a masterful storyteller and creator of Japanese animated feature films, and is widely regarded as one of the most accomplished filmmakers in the history of animation.\nBorn in Tokyo City in the Empire of Japan, Miyazaki expressed interest in manga and animation from an early age, and he joined Toei Animation in 1963. During his early years at Toei Animation he worked as an in-between artist and later collaborated with director Isao Takahata.',
+  'score': 25.4748477935791,
+  'rank': 2},
+ {'content': 'Glen Keane said Miyazaki is a "huge influence" on Walt Disney Animation Studios and has been "part of our heritage" ever since The Rescuers Down Under (1990). The Disney Renaissance era was also prompted by competition with the development of Miyazaki\'s films. Artists from Pixar and Aardman Studios signed a tribute stating, "You\'re our inspiration, Miyazaki-san!"',
+  'score': 24.84897232055664,
+  'rank': 3}]
+
+```
+
+We can have it act as a retriever as well so that when we call invoke method on the `retriever`, we get this output:
+```python
+[Document(page_content='In April 1984, Miyazaki opened his own office in Suginami Ward, naming it Nibariki.\n\n\n=== Studio Ghibli ===\n\n\n==== Early films (1985–1996) ====\nIn June 1985, Miyazaki, Takahata, Tokuma and Suzuki founded the animation production company Studio Ghibli, with funding from Tokuma Shoten. Studio Ghibli\'s first film, Laputa: Castle in the Sky (1986), employed the same production crew of Nausicaä. Miyazaki\'s designs for the film\'s setting were inspired by Greek architecture and "European urbanistic templates".'),
+ Document(page_content='Hayao Miyazaki (宮崎 駿 or 宮﨑 駿, Miyazaki Hayao, Japanese: [mijaꜜzaki hajao]; born January 5, 1941) is a Japanese animator, filmmaker, and manga artist. A co-founder of Studio Ghibli, he has attained international acclaim as a masterful storyteller and creator of Japanese animated feature films, and is widely regarded as one of the most accomplished filmmakers in the history of animation.\nBorn in Tokyo City in the Empire of Japan, Miyazaki expressed interest in manga and animation from an early age, and he joined Toei Animation in 1963. During his early years at Toei Animation he worked as an in-between artist and later collaborated with director Isao Takahata.'),
+ Document(page_content='Glen Keane said Miyazaki is a "huge influence" on Walt Disney Animation Studios and has been "part of our heritage" ever since The Rescuers Down Under (1990). The Disney Renaissance era was also prompted by competition with the development of Miyazaki\'s films. Artists from Pixar and Aardman Studios signed a tribute stating, "You\'re our inspiration, Miyazaki-san!"')]
+
