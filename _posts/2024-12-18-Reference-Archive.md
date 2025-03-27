@@ -62,8 +62,8 @@
 
 ## Multi-Modal
 + [ImageBIND (paper)](https://arxiv.org/pdf/2305.05665)
-+ [weAviate Multi-Modal RAG guide (doc)](https://weaviate.io/blog/multimodal-rag)
-+ [weAviate Multi-Modal RAG workshop (github)](https://github.com/weaviate-tutorials/multimodal-workshop/blob/main/2-multimodal/2-multimedia-rag.ipynb)
++ [Weaviate Multi-Modal RAG guide (doc)](https://weaviate.io/blog/multimodal-rag)
++ [Weaviate Multi-Modal RAG workshop (github)](https://github.com/weaviate-tutorials/multimodal-workshop/blob/main/2-multimodal/2-multimedia-rag.ipynb)
 + [Overview of Contrastive Learning (doc)](https://lilianweng.github.io/posts/2021-05-31-contrastive/)
 + [Weaviate tutorial: Multi-Modal RAG demo (github)](https://github.com/mmgxa/multimodal_rag/blob/main/notebook/rag_demo.ipynb)
   
