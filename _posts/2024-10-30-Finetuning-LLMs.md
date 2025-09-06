@@ -45,13 +45,17 @@ with a single, stable losss.
 Now this one is I guess a State-of-the-art approach for fine-tuning, as it is considered the practical default.
 PEFT tunes a small subset of parameters (or sometimes adds small modules) while freezing most of the backbone, which dramatically shrinks training memory and per-task storage.
 
-#### [Low-Rank Adapters](https://arxiv.org/pdf/2106.09685)
+### [Low-Rank Adapters](https://arxiv.org/pdf/2106.09685)
 <img width="786" height="431" alt="image" src="https://github.com/user-attachments/assets/01e84108-e0a5-4382-ac30-6b73869cede9" />
+
 (Full fine-tuning vs LoRA)
 
-I'm only including this for the PEFT approach because this is REALLY important and also because I've actually used this in practice to test the approach.
+I'm only including this for a PEFT approach because this is REALLY important and also because I've actually used this in practice to test the approach.
 It's simplest way to adapt a big language model without touching most of its wiehgts, and you can ship tiny per-task diffs instead of forking full checkpoints.
-The idea is that just how PEFT's aim is, you freeze the backbone and then for each chosen weight matrix 
+#### What is LoRA?
+
+Consider a linear projection $$W_0 \in \mathbb{R}^\left d x k \right$$
+
 
 
 
