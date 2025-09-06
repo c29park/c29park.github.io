@@ -81,9 +81,9 @@ This stores the frozen backbone in 4-bit(NF4), backpropagates through the quanti
 
 I'll end this post by recommending a good open-source software solution for performing QLoRA memory and time efficiently. 
 #### [Unsloth](https://github.com/unslothai/unsloth)
-<img width="3194" height="992" alt="image" src="https://github.com/user-attachments/assets/0e3fc7de-e011-401b-9dce-efbc7a50f229" />
+<img width="1000" height="200" alt="image" src="https://github.com/user-attachments/assets/0e3fc7de-e011-401b-9dce-efbc7a50f229" />
 
-<img width="1832" height="290" alt="image" src="https://github.com/user-attachments/assets/0cde67dc-93c8-4b18-89e3-d03dbfe6ee5b" />
+<img width="1000" height="200" alt="image" src="https://github.com/user-attachments/assets/0cde67dc-93c8-4b18-89e3-d03dbfe6ee5b" />
 
 
 It says you can fine-tune gpt-oss, Gemma 3n, Qwen3, Llama 4, & Mistral 2x faster with 80% less VRAM. How it does that I do not know. However, when I used this on a google colab environment, the training for Llama 3.1 1B was done in approximately 3-5 hours on a 6 GB GPU. 
