@@ -14,7 +14,7 @@ Well the advantages of them are that they have strong ceilings and are simple me
 Imagine duplicating a full model per task and trying to reuse it for multi-tasking. This would be tedious and demanding.
 
 ### [Reinforcement Learning from Human Feedback (RLHF)](https://arxiv.org/pdf/2203.02155)
-<img width="4250" height="1888" alt="image" src="https://github.com/user-attachments/assets/58651d67-1d26-40ee-9231-aa6f8089c848" />
+<img width="1054" height="300" alt="image" src="https://github.com/user-attachments/assets/58651d67-1d26-40ee-9231-aa6f8089c848" />
 
 You CANNOT leave this out from a strategy that attempts to solve hallucination problems of an LLM. RLHF is comprised of 3 stages:
 
