@@ -44,6 +44,8 @@ For when they are of different classes, we check three different cases:
 
 What this suggests is that the loss function only keeps the case where the euclidean distance is smaller than $$\epsilon$$ because there is no need to keep the two inputs further if their euclidean distance is less than or equal to the minimum distance $$\epsilon$$.
 
+For the representation of all $$(x_i, x_j)$$ pairs' loss, we of course sum up all the pair's loss. 
+
 ### Noise Constrative Estimation (NCE)
 
 Okay, now we move onto more modern approach for contrastive learning. [Noise contrastive estimation (NCE)](https://proceedings.mlr.press/v9/gutmann10a.html) distinguishes target from noise samples using logistic regression classification.
@@ -86,6 +88,43 @@ $$p(C = 1 | X, c) = \frac {p(x_{t} | c) \Pi _{i=1, i \neq {t}}^N p(x_i)} {\sum_{
 And the overall infoNCE loss is given by
 <img width="326" height="74" alt="image" src="https://github.com/user-attachments/assets/d332b56c-e018-4278-b810-51102129138c" />
 
-where $$f(x,c) \propto \frac{p(x|c)}{p(x)}$$. 
+where  the scoring function $$f(x,c) \propto \frac{p(x|c)}{p(x)}$$. 
 This thus means it optimizes negative log probability of classifying the target sample correctly. 
-      
+
+### Contrastive Language-Image Pre-training (CLIP)
+<img width="2560" height="1690" alt="image" src="https://github.com/user-attachments/assets/cd607578-996b-4c88-8f7e-f0c43e2ed73c" />
+
+Now let's get back to the approaches of specifically unifying multiple modalities. There has been an approach to map text and image modalities, called CLIP that is developed by OpenAI in 2021. The basic idea is building a one to one mapping between text and image. As the pipeline above suggests, for each pair of the text and image, both elements are encoded separately and then bridged by computing the cosine similarity (dot product) of the two, which creates one embedding space. This is a simple but a powerful tool. 
+
+### ImageBind
+<img width="1000" height="340" alt="image" src="https://github.com/user-attachments/assets/799058d6-f1b8-4936-86dd-019df5455616" />
+
+Here's a SOTA approach for unifying multiple modalities called [ImageBind](https://arxiv.org/pdf/2305.05665), developed by Facebook in 2023.
+The idea is to connect all modalities via the image modality. It binds modalities, including text, audio, video, depth, thermal, and IMU, by image data such that "all combinations of paired data are not necessary to train a joint embedding, and only image-paired data is sufficient to bind all modalities together".
+
+ImageBind uses web-scale paired image and text data and uses naturally occurring pairs, such as video and audio and image and depth, etc. because that "allows for implicit aligning between text embeddings and other modalities without explicit semantic or textual pairing", which extends to zero shot recognition capabilities.
+
+To do this, ImageBind aligns image embeddings to other modalities with contrastive learning.
+Normally, like the case of CLIP, for zero-shot image classification with text prompts, the training of paired text data is required, but ImageBind does not because of this.
+
+How the contrastive learning works in ImageBind is that it does self-supervised learning for pair (I, M) where I = image modality and M = another modality. Consider the pair ($$I_i$$, $$M_i$$). These elements of the pair are encoded into normalized embeddings $$q_i = f(I_i)$$ and $$k_i = g(M_i)$$ where f and g are DNNs. The embeddings and the encoders are then optimized using an InfoNCE loss:
+
+<img width="370" height="58" alt="image" src="https://github.com/user-attachments/assets/676aaaef-22b2-44c3-b537-75b575668f52" />
+
+where $$\tau$$ is a scalar temperature that changes smoothness of the softmax distribution, j = unrelated negatives.
+Every example $$j \neq i$$ in the mini-batch is considered a negative. This makes the two normalized embeddings closer in the new unified embedding space, thereby aligning I and M. In actual practice, a symmetric loss of $$L_{I,M} + L_{M, I}$$ is employed.
+
+The infoNCE loss looks a little different from the ordinary version. Well, it looks complex, yes, but if you look closely, you will notice that it just represents the probability of getting a positive pair in a softmax form with the  $$j \neq i$$ the negative pair, as I mentioned earlier. The goal should be to minimze the -log p(positive pair). 
+
+This then enables zero-shot cross-modal retrieval tasks without explicit training. 
+
+### Weaviate DB
+<img width="578" height="378" alt="image" src="https://github.com/user-attachments/assets/13fc3322-e7e2-4f25-82e4-ab2fa08ee161" />
+
+Using Weaviate's vector database, we can pull ImageBind via Docker and use it for practice. We can now perform a lot of interesting tasks. We can retrieve relevant audios and videos by giving a related natural language query, and we can also generate a image based on an audio input. 
+Finally, we can also perform embedding-space arithmetic, where you can retrieve some content by adding up elements of different modalities. For instance, you can give an image of a pigeon and an audio of motor revving and retrieve an image with pigeons and a motorcycle. 
+
+### MMRAG
+<img width="566" height="484" alt="image" src="https://github.com/user-attachments/assets/df29f05b-6aa5-4201-bc2c-00692f130060" />
+
+This indeed enables Multimodal RAG task by using vision LLMs (vLLMs). From the figure, the first step is about the retrieval task, where the prompt pulls a relevant image from Weaviate's vectorDB that contains data of all sorts of modalities in ImageBind. Then, the retrieved image and the main prompt is given to the LLM to create a custom response, which is the generation task. Here, we are retrieving specifically an image from the DB because of vision LLM's inability to receive audios or videos directly (as of 2024). Maybe in a near future, LLMs could also receive videos by zero shot, who knows?
