@@ -27,7 +27,7 @@ For this pair, the loss is given as:
 <img width="980" height="48" alt="image" src="https://github.com/user-attachments/assets/dfc858b1-0334-4584-8268-9d77c4fc5c2c" />
 
 where
-+ $$y_i \in$$ {0,...,i,...,k}, k=|Y|+1
++ $$y_i \in \set{0,...,i,...,k}, k=|Y|+1 $$
 + $$f_\theta \left( x \right): X \to \mathbb{R}^d$$,
 + $$\epsilon $$ = minimum distance between samples of dissimilar classes
 
@@ -52,9 +52,12 @@ Okay, now we move onto more modern approach for contrastive learning. [Noise con
 
 <img width="702" height="112" alt="image" src="https://github.com/user-attachments/assets/233e70f0-f432-48d5-a63f-e8f80f27ac53" />
 
-Let x = target sample from the target distribution $$P_\theta (x) = P(x|C=1,\theta)$$.
+Let x = target sample from the target distribution $$P_\theta (x) = P(x|C=1;\theta)$$
 
-Also let $$\tilde{x}$$ = noise sample from the noise distribution $$Q (\tilde{x})=P(\tilde{x}|C=0)$$, where C = label.
+Also let noise sample from the noise distribution  $$=\tilde{x}$$
+and 
+$$Q (\tilde{x})=P(\tilde{x}|C=0)$$,
+where C = label.
 
 Logistic regression models log-odds. It models the logit of a sample u from the target distribution instead of the noise distribution:
 
