@@ -95,7 +95,7 @@ where  the scoring function $$f(x,c) \propto \frac{p(x|c)}{p(x)}$$.
 This thus means it optimizes negative log probability of classifying the target sample correctly. 
 
 ### Contrastive Language-Image Pre-training (CLIP)
-<img width="2560" height="1690" alt="image" src="https://github.com/user-attachments/assets/cd607578-996b-4c88-8f7e-f0c43e2ed73c" />
+<img width="1000" height="300" alt="image" src="https://github.com/user-attachments/assets/cd607578-996b-4c88-8f7e-f0c43e2ed73c" />
 
 Now let's get back to the approaches of specifically unifying multiple modalities. There has been an approach to map text and image modalities, called CLIP that is developed by OpenAI in 2021. The basic idea is building a one to one mapping between text and image. As the pipeline above suggests, for each pair of the text and image, both elements are encoded separately and then bridged by computing the cosine similarity (dot product) of the two, which creates one embedding space. This is a simple but a powerful tool. 
 
