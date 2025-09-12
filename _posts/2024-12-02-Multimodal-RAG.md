@@ -54,7 +54,7 @@ Okay, now we move onto more modern approach for contrastive learning. [Noise con
 
 Let x = target sample from the target distribution 
 
-$$P_\theta (x) = P(x|C=1;\theta)$$.
+$$P_\theta (x) = P(x | C=1;\theta)$$.
 
 Also let $$\tilde{x}$$ = noise sample from the noise distribution
 
@@ -81,7 +81,7 @@ This is an advanced form of NCE, which uses categorical cross-entropy loss to ca
 We don't break the whole distribution down to two distributions for target and noise this time. 
 The probability of finding the target sample correctly can be modeled as:
 
-(c = context vector target sample from p(x|c) while other N-1 samples are from p(x))
+(c = context vector target sample from p(x \| c) while other N-1 samples are from p(x))
 
 Label all samples as X = { $$x_i $$ } $$_{i=1}^N$$, where only one is target: $$x_t$$
 
