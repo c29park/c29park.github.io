@@ -52,11 +52,11 @@ Okay, now we move onto more modern approach for contrastive learning. [Noise con
 
 <img width="702" height="112" alt="image" src="https://github.com/user-attachments/assets/233e70f0-f432-48d5-a63f-e8f80f27ac53" />
 
-Let x = target sample from the target distribution $$P_\theta (x) = P(x|C=1;\theta)$$
+Let x = target sample from the target distribution $$P_\theta (x) = P(x | C=1;\theta)$$
 
 Also let $$\tilde{x}$$ = noise sample from the noise distribution
 and 
-$$Q (\tilde{x})=P(\tilde{x}|C=0)$$,
+$$Q (\tilde{x})=P(\tilde{x} | C=0)$$,
 where C = label.
 
 Logistic regression models log-odds. It models the logit of a sample u from the target distribution instead of the noise distribution:
