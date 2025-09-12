@@ -54,7 +54,7 @@ Okay, now we move onto more modern approach for contrastive learning. [Noise con
 
 Let x = target sample from the target distribution 
 
-$$P_\theta (x) = P(x | C=1;\theta)$$.
+$$P_\theta (x) = P(x | C=1;\theta)$$
 
 Also let $$\tilde{x}$$ = noise sample from the noise distribution
 
