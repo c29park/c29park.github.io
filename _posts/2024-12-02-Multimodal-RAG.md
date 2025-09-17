@@ -1,7 +1,7 @@
 ## Multimodal RAG (MMRAG)
 
 Retrieval Augmented Generation and other RAG-based methods like CAG and KAG focus solely on retrieving textual data. Textual data, however, has limitations, as many documents, especially online ones, not only have the main text but supporting figures, images, or even related videos.
-What if now you could retrieve images, audios, or even videos for answering a query? The retrieval also is typically confined to one vector space, and if you want to retrieve data from multiple domains, you need to have multiple separate storages. If you could combine all different domains coincide in one space, it would be extremely efficient. 
+What if now you could retrieve images, audios, or even videos for answering a query? The retrieval also is typically confined to one vector space, and if you want to retrieve data from multiple domains, you need to have multiple separate storages. If you could combine all different domains and make them coincide in one space, it would be extremely efficient. 
 MMRAG not only enables retrieval of multiple modalities, such as text, images, audios, and videos, but it could also unify these modalities into a single space. 
 
 -----------------------------------------------------------------------------------
