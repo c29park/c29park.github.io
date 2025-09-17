@@ -12,7 +12,7 @@ MMRAG not only enables retrieval of multiple modalities, such as text, images, a
 
 To conjoin two separate modalities from distinct embedding spaces, we employ what's called constrastive learning. As the image suggests, how constrastive learning works is that when a comparison is made between two elements from different modalities, we keep similar ones closer and dissimilar ones further. 
 For instance, suppose you want to unify an image embedding space and an audio embedding space. Let's say that there is ImageA that depicts a car and ImageB that depicts a cat. Suppose you also have Text1 that describes Lamborghini and Text2 that says "Meow". (ImageA and Text1) and (ImageB and Text2) would be put closer to each other in a new embedding space, but any other pairings would be put further apart.
-The basic idea, therefore is to place elements with high conceptual similarities closer and elements with low conceptual similarities further.
+The basic idea, therefore, is to place elements with high conceptual similarities closer and elements with low conceptual similarities further.
 This rule is applied for all elements whether they are from the same modality.
 
 Then now the question is "how would you define a metric for how close similar things should be and how far dissimilar things should be"?
